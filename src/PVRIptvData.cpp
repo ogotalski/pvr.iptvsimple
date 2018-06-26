@@ -616,6 +616,34 @@ PVR_ERROR PVRIptvData::GetChannels(ADDON_HANDLE handle, bool bRadio)
   return PVR_ERROR_NO_ERROR;
 }
 
+bool PVRIptvData::GetChannel(const EPG_TAG tag, PVRIptvChannel &myChannel)
+{
+	P8PLATFORM::CLockObject lock(m_mutex);
+	for (unsigned int iChannelPtr = 0; iChannelPtr < m_channels.size(); iChannelPtr++)
+	{
+		PVRIptvChannel &thisChannel = m_channels.at(iChannelPtr);
+		
+		if (thisChannel.iUniqueId == tag.iUniqueChannelId)
+		{
+			std::ostringstream  od;
+			od << thisChannel.strStreamURL << "?utc=" << (tag.startTime - 1 * 60) << "&lutc=" << std::time(nullptr);
+			myChannel.iUniqueId = thisChannel.iUniqueId;
+			myChannel.bRadio = thisChannel.bRadio;
+			myChannel.iChannelNumber = thisChannel.iChannelNumber;
+			myChannel.iEncryptionSystem = thisChannel.iEncryptionSystem;
+			myChannel.strChannelName = thisChannel.strChannelName;
+			myChannel.strLogoPath = thisChannel.strLogoPath;
+			myChannel.strStreamURL = od.str();
+			myChannel.properties = thisChannel.properties;
+
+			return true;
+		}
+	}
+
+	return false;
+}
+
+
 bool PVRIptvData::GetChannel(const PVR_CHANNEL &channel, PVRIptvChannel &myChannel)
 {
   P8PLATFORM::CLockObject lock(m_mutex);
@@ -1107,6 +1135,21 @@ void PVRIptvData::ReloadEPG(const char * strNewPath)
       }
     }
   }
+}
+
+bool PVRIptvData::IsPlayable(const EPG_TAG * tag)
+{
+	time_t current_time;
+	time(&current_time);
+	if (tag->startTime > current_time) {
+		return false;
+	}
+	
+	if (current_time < tag->endTime)
+	{
+		return true;
+	}
+	return (current_time - tag->endTime) < 86400*5;
 }
 
 void PVRIptvData::ReloadPlayList(const char * strNewPath)

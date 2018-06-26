@@ -92,6 +92,7 @@ public:
   virtual int       GetChannelsAmount(void);
   virtual PVR_ERROR GetChannels(ADDON_HANDLE handle, bool bRadio);
   virtual bool      GetChannel(const PVR_CHANNEL &channel, PVRIptvChannel &myChannel);
+  virtual bool      GetChannel(const EPG_TAG tag, PVRIptvChannel &myChannel);
   virtual int       GetChannelGroupsAmount(void);
   virtual PVR_ERROR GetChannelGroups(ADDON_HANDLE handle, bool bRadio);
   virtual PVR_ERROR GetChannelGroupMembers(ADDON_HANDLE handle, const PVR_CHANNEL_GROUP &group);
@@ -99,6 +100,7 @@ public:
   virtual void      ReaplyChannelsLogos(const char * strNewPath);
   virtual void      ReloadPlayList(const char * strNewPath);
   virtual void      ReloadEPG(const char * strNewPath);
+  virtual bool		IsPlayable(const EPG_TAG* tag);
 
 protected:
   virtual bool                 LoadPlayList(void);

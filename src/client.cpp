@@ -267,10 +267,10 @@ void OnPowerSavingDeactivated()
 
 PVR_ERROR GetAddonCapabilities(PVR_ADDON_CAPABILITIES* pCapabilities)
 {
-  pCapabilities->bSupportsEPG             = true;
-  pCapabilities->bSupportsTV              = true;
-  pCapabilities->bSupportsRadio           = true;
-  pCapabilities->bSupportsChannelGroups   = true;
+  pCapabilities->bSupportsEPG = true;
+  pCapabilities->bSupportsTV = true;
+  pCapabilities->bSupportsRadio = true;
+  pCapabilities->bSupportsChannelGroups = true;
   pCapabilities->bSupportsRecordings      = false;
   pCapabilities->bSupportsRecordingsRename = false;
   pCapabilities->bSupportsRecordingsLifetimeChange = false;
@@ -395,6 +395,42 @@ PVR_ERROR SignalStatus(PVR_SIGNAL_STATUS &signalStatus)
   return PVR_ERROR_NO_ERROR;
 }
 
+PVR_ERROR IsEPGTagPlayable(const EPG_TAG* tag, bool* bIsPlayable) 
+{
+	PVR_ERROR ret = PVR_ERROR_FAILED;
+	if (m_data)
+	{
+		*bIsPlayable = m_data->IsPlayable(tag);
+		ret = PVR_ERROR_NO_ERROR;
+	}
+	return ret;
+}
+PVR_ERROR GetEPGTagStreamProperties(const EPG_TAG* tag,
+	PVR_NAMED_VALUE* properties, unsigned int* iPropertiesCount)
+{
+	PVR_ERROR ret = PVR_ERROR_FAILED;
+	
+	if (m_data->GetChannel(*tag, m_currentChannel))
+	{
+		strncpy(properties[0].strName, PVR_STREAM_PROPERTY_STREAMURL, sizeof(properties[0].strName) - 1);
+		strncpy(properties[0].strValue, m_currentChannel.strStreamURL.c_str(), sizeof(properties[0].strValue) - 1);
+		*iPropertiesCount = 1;
+		if (!m_currentChannel.properties.empty())
+		{
+			for (auto& prop : m_currentChannel.properties)
+			{
+				strncpy(properties[*iPropertiesCount].strName, prop.first.c_str(),
+					sizeof(properties[*iPropertiesCount].strName) - 1);
+				strncpy(properties[*iPropertiesCount].strValue, prop.second.c_str(),
+					sizeof(properties[*iPropertiesCount].strName) - 1);
+				(*iPropertiesCount)++;
+			}
+		}
+		ret = PVR_ERROR_NO_ERROR;
+	}
+	return ret;
+}
+
 /** UNUSED API FUNCTIONS */
 bool CanPauseStream(void) { return false; }
 int GetRecordingsAmount(bool deleted) { return -1; }
@@ -446,8 +482,7 @@ PVR_ERROR SetRecordingLifetime(const PVR_RECORDING*) { return PVR_ERROR_NOT_IMPL
 PVR_ERROR GetStreamTimes(PVR_STREAM_TIMES*) { return PVR_ERROR_NOT_IMPLEMENTED; }
 PVR_ERROR GetStreamProperties(PVR_STREAM_PROPERTIES*) { return PVR_ERROR_NOT_IMPLEMENTED; }
 PVR_ERROR IsEPGTagRecordable(const EPG_TAG*, bool*) { return PVR_ERROR_NOT_IMPLEMENTED; }
-PVR_ERROR IsEPGTagPlayable(const EPG_TAG*, bool*) { return PVR_ERROR_NOT_IMPLEMENTED; }
-PVR_ERROR GetEPGTagStreamProperties(const EPG_TAG*, PVR_NAMED_VALUE*, unsigned int*) { return PVR_ERROR_NOT_IMPLEMENTED; }
+
 PVR_ERROR GetEPGTagEdl(const EPG_TAG* epgTag, PVR_EDL_ENTRY edl[], int *size) { return PVR_ERROR_NOT_IMPLEMENTED; }
 
 } // extern "C"
