@@ -338,14 +338,16 @@ PVR_ERROR GetChannelStreamProperties(const PVR_CHANNEL* channel, PVR_NAMED_VALUE
   if (!channel || !properties || !iPropertiesCount)
     return PVR_ERROR_SERVER_ERROR;
 
-  if (*iPropertiesCount < 1)
+  if (*iPropertiesCount < 2)
     return PVR_ERROR_INVALID_PARAMETERS;
 
   if (m_data && m_data->GetChannel(*channel, m_currentChannel))
   {
     strncpy(properties[0].strName, PVR_STREAM_PROPERTY_STREAMURL, sizeof(properties[0].strName) - 1);
     strncpy(properties[0].strValue, m_currentChannel.strStreamURL.c_str(), sizeof(properties[0].strValue) - 1);
-    *iPropertiesCount = 1;
+    strncpy(properties[1].strName, PVR_STREAM_PROPERTY_ISREALTIMESTREAM, sizeof(properties[1].strName) - 1);
+    strncpy(properties[1].strValue, "true", sizeof(properties[1].strValue) - 1);
+    *iPropertiesCount = 2;
     if (!m_currentChannel.properties.empty())
     {
       for (auto& prop : m_currentChannel.properties)
@@ -484,5 +486,6 @@ PVR_ERROR GetStreamProperties(PVR_STREAM_PROPERTIES*) { return PVR_ERROR_NOT_IMP
 PVR_ERROR IsEPGTagRecordable(const EPG_TAG*, bool*) { return PVR_ERROR_NOT_IMPLEMENTED; }
 
 PVR_ERROR GetEPGTagEdl(const EPG_TAG* epgTag, PVR_EDL_ENTRY edl[], int *size) { return PVR_ERROR_NOT_IMPLEMENTED; }
+PVR_ERROR GetStreamReadChunkSize(int* chunksize) { return PVR_ERROR_NOT_IMPLEMENTED; }
 
 } // extern "C"
