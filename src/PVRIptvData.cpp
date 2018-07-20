@@ -34,6 +34,8 @@
 #include "PVRIptvData.h"
 #include "p8-platform/util/StringUtils.h"
 #include "client.h"
+#include "TSReader.h" 
+#include "p8-platform/util/util.h"
 
 #define M3U_START_MARKER        "#EXTM3U"
 #define M3U_INFO_MARKER         "#EXTINF"
@@ -51,6 +53,10 @@
 
 using namespace ADDON;
 using namespace rapidxml;
+using namespace ArgusTV;
+
+using namespace P8PLATFORM;
+using namespace std;
 
 template<class Ch>
 inline bool GetNodeValue(const xml_node<Ch> * pRootNode, const char* strTag, std::string& strStringValue)
@@ -90,7 +96,8 @@ PVRIptvData::PVRIptvData(void)
   m_groups.clear();
   m_epg.clear();
   m_genres.clear();
-
+  m_tsreader = NULL;
+  m_delay = 5000;
   if (LoadPlayList())
     XBMC->QueueNotification(QUEUE_INFO, "%d channels loaded.", m_channels.size());
 }
@@ -1207,4 +1214,75 @@ int PVRIptvData::GetChannelId(const char * strChannelName, const char * strStrea
     iId = ((iId << 5) + iId) + c; /* iId * 33 + c */
 
   return abs(iId);
+}
+
+bool PVRIptvData::OpenLiveStream(const PVRIptvChannel &channel)
+{
+  CloseLiveStream();
+
+  // Open Timeshift buffer
+  // TODO: rtsp support
+  m_tsreader = new CTsReader();
+  XBMC->Log(LOG_DEBUG, "Open TsReader");
+  m_tsreader->Open(channel.strStreamURL.c_str());
+  m_tsreader->OnZap();
+  XBMC->Log(LOG_DEBUG, "Delaying %ld milliseconds.", (m_delay));
+  usleep(1000 * m_delay);
+
+  return true;
+
+}
+
+int PVRIptvData::ReadLiveStream(unsigned char* pBuffer, unsigned int iBufferSize)
+{
+  unsigned long read_wanted = iBufferSize;
+  unsigned long read_done = 0;
+  static int read_timeouts = 0;
+  unsigned char* bufptr = pBuffer;
+
+  // XBMC->Log(LOG_DEBUG, "->ReadLiveStream(buf_size=%i)", iBufferSize);
+  if (!m_tsreader)
+    return -1;
+
+  while (read_done < (unsigned long)iBufferSize)
+  {
+    read_wanted = iBufferSize - read_done;
+
+    long lRc = 0;
+    if ((lRc = m_tsreader->Read(bufptr, read_wanted, &read_wanted)) > 0)
+    {
+      usleep(400000);
+      read_timeouts++;
+      XBMC->Log(LOG_NOTICE, "ReadLiveStream requested %d but only read %d bytes.", iBufferSize,
+                read_wanted);
+      return read_wanted;
+    }
+    read_done += read_wanted;
+
+    if (read_done < (unsigned long)iBufferSize)
+    {
+      if (read_timeouts > 25)
+      {
+        XBMC->Log(LOG_INFO, "No data in 1 second");
+        read_timeouts = 0;
+        return read_done;
+      }
+      bufptr += read_wanted;
+      read_timeouts++;
+      usleep(40000);
+    }
+  }
+  // XBMC->Log(LOG_DEBUG, "ReadLiveStream(buf_size=%i), %d timeouts", iBufferSize, read_timeouts);
+  read_timeouts = 0;
+  return read_done;
+}
+
+void PVRIptvData::CloseLiveStream(void)
+{
+  if (m_tsreader != NULL)
+  {
+    XBMC->Log(LOG_DEBUG, "Close existing and open new TsReader...");
+    m_tsreader->Close();
+    SAFE_DELETE(m_tsreader);
+  }
 }
