@@ -34,6 +34,7 @@
 #include "PVRIptvData.h"
 #include "p8-platform/util/StringUtils.h"
 #include "client.h"
+#include "p8-platform/util/util.h"
 
 #define M3U_START_MARKER        "#EXTM3U"
 #define M3U_INFO_MARKER         "#EXTINF"
@@ -51,6 +52,9 @@
 
 using namespace ADDON;
 using namespace rapidxml;
+
+using namespace P8PLATFORM;
+using namespace std;
 
 template<class Ch>
 inline bool GetNodeValue(const xml_node<Ch> * pRootNode, const char* strTag, std::string& strStringValue)
@@ -90,7 +94,8 @@ PVRIptvData::PVRIptvData(void)
   m_groups.clear();
   m_epg.clear();
   m_genres.clear();
-
+  m_file = NULL;
+  m_delay = 5000;
   if (LoadPlayList())
     XBMC->QueueNotification(QUEUE_INFO, "%d channels loaded.", m_channels.size());
 }
@@ -1207,4 +1212,38 @@ int PVRIptvData::GetChannelId(const char * strChannelName, const char * strStrea
     iId = ((iId << 5) + iId) + c; /* iId * 33 + c */
 
   return abs(iId);
+}
+
+bool PVRIptvData::OpenLiveStream(const PVRIptvChannel &channel)
+{
+  CloseLiveStream();
+   
+  m_file = XBMC->CURLCreate(channel.strStreamURL.c_str());
+  if (!m_file)
+  {
+    return false;
+  }
+  if (!XBMC->CURLOpen(m_file, XFILE::READ_CACHED))
+  {  
+    return false;
+  }
+  return true;
+
+}
+
+int PVRIptvData::ReadLiveStream(unsigned char* pBuffer, unsigned int iBufferSize)
+{
+  
+	
+  return XBMC->ReadFile(m_file, pBuffer, iBufferSize);
+}
+
+void PVRIptvData::CloseLiveStream(void)
+{
+  if (m_file)
+  {
+    XBMC->CloseFile(file);
+    SAFE_DELETE(file);
+  }
+  
 }
