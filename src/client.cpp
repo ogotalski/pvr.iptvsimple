@@ -430,8 +430,9 @@ PVR_ERROR GetEPGTagStreamProperties(const EPG_TAG* tag,
 				(*iPropertiesCount)++;
 			}
 		}
-		ret = PVR_ERROR_NO_ERROR;
-	}
+        return PVR_ERROR_NOT_IMPLEMENTED;
+       //return PVR_ERROR_NO_ERROR;
+    }
 	return ret;
 }
 
@@ -442,6 +443,7 @@ bool OpenLiveStream(const PVR_CHANNEL& channel)
     if (channel.iUniqueId == m_currentChannel.iUniqueId)
     {
       return m_data->OpenLiveStream(m_currentChannel);
+      
     }
   }
   return false;

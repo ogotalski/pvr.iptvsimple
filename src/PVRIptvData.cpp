@@ -1234,7 +1234,6 @@ bool PVRIptvData::OpenLiveStream(const PVRIptvChannel &channel)
 int PVRIptvData::ReadLiveStream(unsigned char* pBuffer, unsigned int iBufferSize)
 {
   
-	
   return XBMC->ReadFile(m_file, pBuffer, iBufferSize);
 }
 
@@ -1242,8 +1241,8 @@ void PVRIptvData::CloseLiveStream(void)
 {
   if (m_file)
   {
-    XBMC->CloseFile(file);
-    SAFE_DELETE(file);
+    XBMC->CloseFile(m_file);
+    m_file = NULL;
   }
   
 }
