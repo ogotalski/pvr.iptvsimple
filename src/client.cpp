@@ -433,34 +433,6 @@ PVR_ERROR GetEPGTagStreamProperties(const EPG_TAG* tag,
 	return ret;
 }
 
-bool OpenLiveStream(const PVR_CHANNEL& channel)
-{
-  if (m_data)
-  {
-    if (channel.iUniqueId == m_currentChannel.iUniqueId)
-    {
-      return m_data->OpenLiveStream(m_currentChannel);
-    }
-  }
-  return false;
-}
-
-void CloseLiveStream(void)
-{
-  if (m_data)
-  {
-    m_data->CloseLiveStream();
-  }
-}
-
-int ReadLiveStream(unsigned char* pBuffer, unsigned int iBufferSize)
-{
-  if (m_data)
-  {
-    return m_data->ReadLiveStream(pBuffer, iBufferSize);
-  }
-  return 0;
-}
 /** UNUSED API FUNCTIONS */
 bool CanPauseStream(void) { return false; }
 int GetRecordingsAmount(bool deleted) { return -1; }
@@ -472,15 +444,16 @@ PVR_ERROR DeleteChannel(const PVR_CHANNEL &channel) { return PVR_ERROR_NOT_IMPLE
 PVR_ERROR RenameChannel(const PVR_CHANNEL &channel) { return PVR_ERROR_NOT_IMPLEMENTED; }
 PVR_ERROR OpenDialogChannelSettings(const PVR_CHANNEL &channel) { return PVR_ERROR_NOT_IMPLEMENTED; }
 PVR_ERROR OpenDialogChannelAdd(const PVR_CHANNEL &channel) { return PVR_ERROR_NOT_IMPLEMENTED; }
-
+void CloseLiveStream(void) { }
 bool OpenRecordedStream(const PVR_RECORDING &recording) { return false; }
+bool OpenLiveStream(const PVR_CHANNEL &channel) { return false; }
 void CloseRecordedStream(void) {}
 int ReadRecordedStream(unsigned char *pBuffer, unsigned int iBufferSize) { return 0; }
 long long SeekRecordedStream(long long iPosition, int iWhence /* = SEEK_SET */) { return 0; }
 long long LengthRecordedStream(void) { return 0; }
 void DemuxReset(void) {}
 void DemuxFlush(void) {}
-
+int ReadLiveStream(unsigned char *pBuffer, unsigned int iBufferSize) { return 0; }
 long long SeekLiveStream(long long iPosition, int iWhence /* = SEEK_SET */) { return -1; }
 long long LengthLiveStream(void) { return -1; }
 PVR_ERROR DeleteRecording(const PVR_RECORDING &recording) { return PVR_ERROR_NOT_IMPLEMENTED; }

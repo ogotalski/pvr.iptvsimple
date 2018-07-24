@@ -29,13 +29,6 @@
 #include "libXBMC_pvr.h"
 #include "p8-platform/threads/threads.h"
 
-
-namespace ArgusTV
-{
-	class CTsReader;
-}
-
-
 struct PVRIptvEpgEntry
 {
   int         iBroadcastId;
@@ -108,11 +101,6 @@ public:
   virtual void      ReloadPlayList(const char * strNewPath);
   virtual void      ReloadEPG(const char * strNewPath);
   virtual bool		IsPlayable(const EPG_TAG* tag);
-  virtual bool		OpenLiveStream(const PVRIptvChannel& channel);		
-  virtual void	    CloseLiveStream(void);
-  virtual int		ReadLiveStream(unsigned char* pBuffer, unsigned int iBufferSize);		
-
-
 
 protected:
   virtual bool                 LoadPlayList(void);
@@ -141,7 +129,6 @@ private:
   int                               m_iEPGTimeShift;
   int                               m_iLastStart;
   int                               m_iLastEnd;
-  int								m_delay;
   std::string                       m_strXMLTVUrl;
   std::string                       m_strM3uUrl;
   std::string                       m_strLogoPath;
@@ -150,5 +137,4 @@ private:
   std::vector<PVRIptvEpgChannel>    m_epg;
   std::vector<PVRIptvEpgGenre>      m_genres;
   P8PLATFORM::CMutex                m_mutex;
-  ArgusTV::CTsReader*				m_tsreader;
 };
