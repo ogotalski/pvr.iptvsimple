@@ -28,7 +28,7 @@
 #include "p8-platform/os.h"
 #include "libXBMC_pvr.h"
 #include "p8-platform/threads/threads.h"
-
+#include "buffers/Buffer.h"
 
 
 struct PVRIptvEpgEntry
@@ -64,6 +64,7 @@ struct PVRIptvChannel
   std::string strChannelName;
   std::string strLogoPath;
   std::string strStreamURL;
+  std::string strStreamURLBase;
   std::string strTvgId;
   std::string strTvgName;
   std::string strTvgLogo;
@@ -106,7 +107,8 @@ public:
   virtual bool		OpenLiveStream(const PVRIptvChannel& channel);		
   virtual void	    CloseLiveStream(void);
   virtual int		ReadLiveStream(unsigned char* pBuffer, unsigned int iBufferSize);		
-
+  virtual int		LengthLiveStream(void);
+  virtual PVR_ERROR GetStreamTimes(PVR_STREAM_TIMES* stream_times);
 
 
 protected:
@@ -145,5 +147,5 @@ private:
   std::vector<PVRIptvEpgChannel>    m_epg;
   std::vector<PVRIptvEpgGenre>      m_genres;
   P8PLATFORM::CMutex                m_mutex;
-  void*								m_file;
+  Buffers::Buffer*					m_buffer;
 };

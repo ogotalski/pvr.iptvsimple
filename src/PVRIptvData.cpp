@@ -34,6 +34,9 @@
 #include "PVRIptvData.h"
 #include "p8-platform/util/StringUtils.h"
 #include "client.h"
+#include "buffers/Buffer.h"
+#include "buffers/DummyBuffer.h"
+
 #include "p8-platform/util/util.h"
 
 #define M3U_START_MARKER        "#EXTM3U"
@@ -94,7 +97,7 @@ PVRIptvData::PVRIptvData(void)
   m_groups.clear();
   m_epg.clear();
   m_genres.clear();
-  m_file = NULL;
+  m_buffer = new Buffers::DummyBuffer();
   m_delay = 5000;
   if (LoadPlayList())
     XBMC->QueueNotification(QUEUE_INFO, "%d channels loaded.", m_channels.size());
@@ -336,7 +339,7 @@ bool PVRIptvData::LoadPlayList(void)
   tmpChannel.strTvgName     = "";
   tmpChannel.strTvgLogo     = "";
   tmpChannel.iTvgShift      = 0;
-
+	
   std::string strLine;
   while(std::getline(stream, strLine))
   {
@@ -621,6 +624,15 @@ PVR_ERROR PVRIptvData::GetChannels(ADDON_HANDLE handle, bool bRadio)
   return PVR_ERROR_NO_ERROR;
 }
 
+std::string GetEpgUrl(std::string url, EPG_TAG tag)
+{
+  std::ostringstream od;
+  od << url << "?utc=" << (tag.startTime - 1 * 60)
+     << "&lutc=" << std::time(nullptr);
+  return od.str();
+}
+
+
 bool PVRIptvData::GetChannel(const EPG_TAG tag, PVRIptvChannel &myChannel)
 {
 	P8PLATFORM::CLockObject lock(m_mutex);
@@ -630,21 +642,18 @@ bool PVRIptvData::GetChannel(const EPG_TAG tag, PVRIptvChannel &myChannel)
 		
 		if (thisChannel.iUniqueId == tag.iUniqueChannelId)
 		{
-			std::ostringstream  od;
-			od << thisChannel.strStreamURL << "?utc=" << (tag.startTime - 1 * 60) << "&lutc=" << std::time(nullptr);
 			myChannel.iUniqueId = thisChannel.iUniqueId;
 			myChannel.bRadio = thisChannel.bRadio;
 			myChannel.iChannelNumber = thisChannel.iChannelNumber;
 			myChannel.iEncryptionSystem = thisChannel.iEncryptionSystem;
 			myChannel.strChannelName = thisChannel.strChannelName;
 			myChannel.strLogoPath = thisChannel.strLogoPath;
-			myChannel.strStreamURL = od.str();
+			myChannel.strStreamURL = GetEpgUrl(thisChannel.strStreamURL, tag);
 			myChannel.properties = thisChannel.properties;
-
+            myChannel.strStreamURLBase = thisChannel.strStreamURL;
 			return true;
 		}
 	}
-
 	return false;
 }
 
@@ -665,6 +674,7 @@ bool PVRIptvData::GetChannel(const PVR_CHANNEL &channel, PVRIptvChannel &myChann
       myChannel.strLogoPath       = thisChannel.strLogoPath;
       myChannel.strStreamURL      = thisChannel.strStreamURL;
       myChannel.properties        = thisChannel.properties;
+      myChannel.strStreamURLBase = thisChannel.strStreamURL;
 
       return true;
     }
@@ -1217,7 +1227,7 @@ int PVRIptvData::GetChannelId(const char * strChannelName, const char * strStrea
 bool PVRIptvData::OpenLiveStream(const PVRIptvChannel &channel)
 {
   CloseLiveStream();
-   
+  /*   
   m_file = XBMC->CURLCreate(channel.strStreamURL.c_str());
   if (!m_file)
   {
@@ -1228,21 +1238,34 @@ bool PVRIptvData::OpenLiveStream(const PVRIptvChannel &channel)
     return false;
   }
   return true;
+  */
+  return m_buffer->Open(channel.strStreamURL.c_str());
 
 }
 
 int PVRIptvData::ReadLiveStream(unsigned char* pBuffer, unsigned int iBufferSize)
 {
-  
-  return XBMC->ReadFile(m_file, pBuffer, iBufferSize);
+  return m_buffer->Read(pBuffer, iBufferSize);
+  //return XBMC->ReadFile(m_file, pBuffer, iBufferSize);
+}
+
+int PVRIptvData::LengthLiveStream(void)
+{
+  return -1; //m_buffer->Length();
 }
 
 void PVRIptvData::CloseLiveStream(void)
 {
-  if (m_file)
+  /*if (m_file)
   {
     XBMC->CloseFile(m_file);
     m_file = NULL;
   }
-  
+  */
+  m_buffer->Close();
+}
+PVR_ERROR PVRIptvData::GetStreamTimes(PVR_STREAM_TIMES* stream_times)
+{
+  m_buffer->GetStreamTimes(stream_times);
+  return PVR_ERROR_NO_ERROR;
 }

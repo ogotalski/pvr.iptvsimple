@@ -347,7 +347,7 @@ PVR_ERROR GetChannelStreamProperties(const PVR_CHANNEL* channel, PVR_NAMED_VALUE
     strncpy(properties[0].strName, PVR_STREAM_PROPERTY_STREAMURL, sizeof(properties[0].strName) - 1);
     strncpy(properties[0].strValue, m_currentChannel.strStreamURL.c_str(), sizeof(properties[0].strValue) - 1);
     strncpy(properties[1].strName, PVR_STREAM_PROPERTY_ISREALTIMESTREAM, sizeof(properties[1].strName) - 1);
-    strncpy(properties[1].strValue, "true", sizeof(properties[1].strValue) - 1);
+    strncpy(properties[1].strValue, "false", sizeof(properties[1].strValue) - 1);
     *iPropertiesCount = 2;
     if (!m_currentChannel.properties.empty())
     {
@@ -360,8 +360,8 @@ PVR_ERROR GetChannelStreamProperties(const PVR_CHANNEL* channel, PVR_NAMED_VALUE
         (*iPropertiesCount)++;
       }
     }
-    return PVR_ERROR_NOT_IMPLEMENTED;
-    //return PVR_ERROR_NO_ERROR;
+   // return PVR_ERROR_NOT_IMPLEMENTED;
+   return PVR_ERROR_NO_ERROR;
   }
 
   return PVR_ERROR_SERVER_ERROR;
@@ -418,7 +418,10 @@ PVR_ERROR GetEPGTagStreamProperties(const EPG_TAG* tag,
 	{
 		strncpy(properties[0].strName, PVR_STREAM_PROPERTY_STREAMURL, sizeof(properties[0].strName) - 1);
 		strncpy(properties[0].strValue, m_currentChannel.strStreamURL.c_str(), sizeof(properties[0].strValue) - 1);
-		*iPropertiesCount = 1;
+        strncpy(properties[1].strName, PVR_STREAM_PROPERTY_ISREALTIMESTREAM,
+                        sizeof(properties[1].strName) - 1);
+        strncpy(properties[1].strValue, "false", sizeof(properties[1].strValue) - 1);
+        *iPropertiesCount = 2;
 		if (!m_currentChannel.properties.empty())
 		{
 			for (auto& prop : m_currentChannel.properties)
@@ -430,8 +433,8 @@ PVR_ERROR GetEPGTagStreamProperties(const EPG_TAG* tag,
 				(*iPropertiesCount)++;
 			}
 		}
-        return PVR_ERROR_NOT_IMPLEMENTED;
-       //return PVR_ERROR_NO_ERROR;
+      //  return PVR_ERROR_NOT_IMPLEMENTED;
+      return PVR_ERROR_NO_ERROR;
     }
 	return ret;
 }
@@ -465,6 +468,25 @@ int ReadLiveStream(unsigned char* pBuffer, unsigned int iBufferSize)
   }
   return 0;
 }
+
+PVR_ERROR GetStreamTimes(PVR_STREAM_TIMES* stream_times)
+{
+  if (m_data)
+  {
+    return m_data->GetStreamTimes(stream_times);
+  }
+  return PVR_ERROR_NOT_IMPLEMENTED;
+}
+long long LengthLiveStream(void)
+{
+  if (m_data)
+  {
+    return m_data->LengthLiveStream();
+  }
+  return -1;
+}
+
+
 /** UNUSED API FUNCTIONS */
 bool CanPauseStream(void) { return false; }
 int GetRecordingsAmount(bool deleted) { return -1; }
@@ -486,7 +508,6 @@ void DemuxReset(void) {}
 void DemuxFlush(void) {}
 
 long long SeekLiveStream(long long iPosition, int iWhence /* = SEEK_SET */) { return -1; }
-long long LengthLiveStream(void) { return -1; }
 PVR_ERROR DeleteRecording(const PVR_RECORDING &recording) { return PVR_ERROR_NOT_IMPLEMENTED; }
 PVR_ERROR RenameRecording(const PVR_RECORDING &recording) { return PVR_ERROR_NOT_IMPLEMENTED; }
 PVR_ERROR SetRecordingPlayCount(const PVR_RECORDING &recording, int count) { return PVR_ERROR_NOT_IMPLEMENTED; }
@@ -512,7 +533,6 @@ PVR_ERROR DeleteAllRecordingsFromTrash() { return PVR_ERROR_NOT_IMPLEMENTED; }
 PVR_ERROR SetEPGTimeFrame(int) { return PVR_ERROR_NOT_IMPLEMENTED; }
 PVR_ERROR GetDescrambleInfo(PVR_DESCRAMBLE_INFO*) { return PVR_ERROR_NOT_IMPLEMENTED; }
 PVR_ERROR SetRecordingLifetime(const PVR_RECORDING*) { return PVR_ERROR_NOT_IMPLEMENTED; }
-PVR_ERROR GetStreamTimes(PVR_STREAM_TIMES*) { return PVR_ERROR_NOT_IMPLEMENTED; }
 PVR_ERROR GetStreamProperties(PVR_STREAM_PROPERTIES*) { return PVR_ERROR_NOT_IMPLEMENTED; }
 PVR_ERROR IsEPGTagRecordable(const EPG_TAG*, bool*) { return PVR_ERROR_NOT_IMPLEMENTED; }
 
